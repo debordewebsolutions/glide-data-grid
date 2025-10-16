@@ -32,7 +32,14 @@ import type { RenderStateProvider } from "../../../common/render-state-provider.
 import type { ImageWindowLoader } from "../image-window-loader-interface.js";
 import { intersectRect } from "../../../common/math.js";
 import type { GridMouseGroupHeaderEventArgs } from "../event-args.js";
-import { getRowSpanBounds, getSkipPoint, getSpanBounds, walkColumns, walkRowsInCol } from "./data-grid-render.walk.js";
+import {
+    getBothSpanBounds,
+    getRowSpanBounds,
+    getSkipPoint,
+    getSpanBounds,
+    walkColumns,
+    walkRowsInCol,
+} from "./data-grid-render.walk.js";
 
 const loadingCell: InnerGridCell = {
     kind: GridCellKind.Loading,
@@ -120,6 +127,7 @@ export function drawCells(
     let result: Rectangle[] | undefined;
     let handledSpans: Set<string> | undefined = undefined;
     let handledRowSpans: Set<string> | undefined = undefined;
+    let handledBothSpans: Set<string> | undefined = undefined;
 
     const skipPoint = getSkipPoint(drawRegions);
 
@@ -227,7 +235,53 @@ export function drawCells(
                     let drawingSpan = false;
                     let skipContents = false;
 
-                    if (cell?.rowSpan !== undefined) {
+                    if (cell.rowSpan !== undefined && cell?.span !== undefined) {
+                        const [rowStart, rowEnd] = cell.rowSpan;
+                        const [colStart, colEnd] = cell.span;
+                        const spanKey = `$${colStart},${colEnd},${rowStart},${rowEnd}`;
+                        if (handledBothSpans === undefined) handledBothSpans = new Set();
+                        if (!handledBothSpans.has(spanKey)) {
+                            const area = getBothSpanBounds(
+                                cell?.rowSpan as Item,
+                                cell?.span as Item,
+                                drawX,
+                                drawY,
+                                c.width,
+                                row,
+                                getRowHeight,
+                                c,
+                                allColumns
+                            );
+                            if (area !== undefined) {
+                                cellY = area.y;
+                                cellX = area.x;
+                                cellHeight = area.height;
+                                cellWidth = area.width;
+                                handledBothSpans.add(spanKey);
+                                ctx.restore();
+                                prepResult = undefined;
+                                ctx.save();
+                                ctx.beginPath();
+                                ctx.rect(area.x, area.y, area.width, area.height);
+                                if (result === undefined) {
+                                    result = [];
+                                }
+                                result.push({
+                                    x: area.x,
+                                    y: area.y,
+                                    width: area.width,
+                                    height: area.height,
+                                });
+                                ctx.clip();
+                                drawingSpan = true;
+                            }
+                        } else {
+                            toDraw--;
+                            return;
+                        }
+                    }
+
+                    if (cell?.rowSpan !== undefined && !cell.span) {
                         const [start, end] = cell.rowSpan;
                         const spanKey = `${c.sourceIndex - 1},${start},${end}`;
                         if (handledRowSpans === undefined) handledRowSpans = new Set();
@@ -267,7 +321,7 @@ export function drawCells(
                         }
                     }
 
-                    if (cell.span !== undefined) {
+                    if (cell.span !== undefined && !cell.rowSpan) {
                         const [startCol, endCol] = cell.span;
                         const spanKey = `${row},${startCol},${endCol},${c.sticky}`; //alloc
                         if (handledSpans === undefined) handledSpans = new Set();
@@ -329,6 +383,7 @@ export function drawCells(
                         selection.rows.some(
                             index => cell.rowSpan !== undefined && index >= cell.rowSpan[0] && index <= cell.rowSpan[1] //alloc
                         );
+
                     if (isSelected && !isFocused && drawFocus) {
                         accentCount = 0;
                     } else if (isSelected && drawFocus) {

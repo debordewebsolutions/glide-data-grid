@@ -300,7 +300,7 @@ export function drawFillHandle(
                             // plus any configured offsets (fill.offsetX, fill.offsetY).
                             // Offset by half pixel to align with grid lines.
                             const hx = cellX + cellWidth + fill.offsetX - half + 0.5;
-                            const hy = drawY + rh + fill.offsetY - half + 0.5;
+                            const hy = cellY + cellHeight + fill.offsetY - half + 0.5;
 
                             ctx.beginPath();
                             // ctx.rect(cellX + cellWidth - 4, cellY + cellHeight - 4, 4, 4);
