@@ -4,6 +4,7 @@
 name: Beta CI
 
 on:
+    workflow_dispatch:
     push:
         tags:
             - "v*-*"
@@ -14,55 +15,67 @@ jobs:
             run:
                 working-directory: ./packages/core
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
-                  node-version: 20.10.0
+                  node-version: 22.21.1
+                  registry-url: 'https://npm.pkg.github.com'
+                  scope: '@debordewebsolutions'
             - name: Build
               run: npm install && npm run build
               working-directory: .
-            - uses: JS-DevTools/npm-publish@v1
-              with:
-                  token: ${{ secrets.NPM_TOKEN }}
-                  access: public
-                  tag: beta
-                  package: ./packages/core/package.json
+            - name: Publish to GitHub Packages
+              run: npm publish --tag beta
+              working-directory: ./packages/core
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     publish-cells:
         defaults:
             run:
                 working-directory: ./packages/cells
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
-                  node-version: 20.10.0
+                  node-version: 22.21.1
+                  registry-url: 'https://npm.pkg.github.com'
+                  scope: '@debordewebsolutions'
             - name: Build
               run: npm install && npm run build
               working-directory: .
-            - uses: JS-DevTools/npm-publish@v1
-              with:
-                  token: ${{ secrets.NPM_TOKEN }}
-                  access: public
-                  tag: beta
-                  package: ./packages/cells/package.json
+            - name: Publish to GitHub Packages
+              run: npm publish --tag beta
+              working-directory: ./packages/cells
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     publish-source:
         defaults:
             run:
                 working-directory: ./packages/source
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
-                  node-version: 20.10.0
+                  node-version: 22.21.1
+                  registry-url: 'https://npm.pkg.github.com'
+                  scope: '@debordewebsolutions'
             - name: Bootstrap
               run: npm install && npm run build
               working-directory: .
-            - uses: JS-DevTools/npm-publish@v1
-              with:
-                  token: ${{ secrets.NPM_TOKEN }}
-                  access: public
-                  tag: beta
-                  package: ./packages/source/package.json
+            - name: Publish to GitHub Packages
+              run: npm publish --tag beta
+              working-directory: ./packages/source
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

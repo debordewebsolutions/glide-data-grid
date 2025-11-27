@@ -1,8 +1,9 @@
 name: Storybook Build and Deploy
 on:
-    push:
-        branches: ["main"]
-        paths: ["packages/core/**", "packages/cells/**", "packages/source/**"]
+    workflow_dispatch:
+    # push:
+    #     branches: ["main"]
+    #     paths: ["packages/core/**", "packages/cells/**", "packages/source/**"]
 jobs:
     build-and-deploy:
         runs-on: ubuntu-latest
