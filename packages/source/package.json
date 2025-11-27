@@ -1,5 +1,5 @@
 {
-    "name": "@glideapps/glide-data-grid-source",
+    "name": "@debordewebsolutions/glide-data-grid-source",
     "version": "6.0.4-alpha24",
     "description": "Useful data source hooks for Glide Data Grid",
     "sideEffects": false,
@@ -26,10 +26,10 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/glideapps/glide-data-grid.git",
+        "url": "git+https://github.com/debordewebsolutions/glide-data-grid.git",
         "directory": "packages/source"
     },
-    "homepage": "https://github.com/glideapps/glide-data-grid/tree/main/packages/source",
+    "homepage": "https://github.com/debordewebsolutions/glide-data-grid/tree/main/packages/source",
     "author": "Glide",
     "license": "MIT",
     "keywords": [
