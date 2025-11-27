@@ -143,6 +143,67 @@ export function walkGroups(
     }
 }
 
+export function getBothSpanBounds(
+    rowSpan: Item,
+    colSpan: Item,
+    cellX: number,
+    cellY: number,
+    cellW: number,
+    row: number,
+    getRowHeight: (row: number) => number,
+    column: MappedGridColumn,
+    allColumns: readonly MappedGridColumn[]
+): Rectangle | undefined {
+    const rowSpannedRect = getRowSpanBounds(rowSpan, cellX, cellY, cellW, row, getRowHeight);
+    const colSpannedRect: [Rectangle | undefined, Rectangle | undefined] = getSpanBounds(
+        colSpan,
+        cellX,
+        cellY,
+        cellW,
+        getRowHeight(row),
+        column,
+        allColumns
+    );
+    const correctColSpannedRect = column.sticky ? colSpannedRect[0] : colSpannedRect[1];
+    return {
+        x: rowSpannedRect?.x,
+        y: rowSpannedRect?.y,
+        height: rowSpannedRect?.height,
+        width: correctColSpannedRect?.width,
+    } as Rectangle | undefined;
+}
+
+export function getRowSpanBounds(
+    rowSpan: Item,
+    cellX: number,
+    cellY: number,
+    cellW: number,
+    row: number,
+    getRowHeight: (row: number) => number
+): Rectangle | undefined {
+    const [startRow, endRow] = rowSpan;
+    const totalSpannedRows = endRow - startRow;
+    let tempY = cellY;
+    let tempH = totalSpannedRows * getRowHeight(row);
+    if (getRowHeight !== undefined) {
+        tempH = getRowHeight(row);
+        for (let x = row - 1; x >= startRow; x--) {
+            tempY -= getRowHeight(x);
+            tempH += getRowHeight(x);
+        }
+        for (let x = row + 1; x <= endRow; x++) {
+            tempH += getRowHeight(x);
+        }
+    }
+    const contentRect: Rectangle = {
+        x: cellX,
+        y: tempY,
+        width: cellW,
+        height: tempH,
+    };
+    return contentRect;
+}
+
 export function getSpanBounds(
     span: Item,
     cellX: number,
