@@ -5,6 +5,9 @@
     "sideEffects": [
         "**/*.css"
     ],
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
     "type": "module",
     "browser": "dist/esm/index.js",
     "main": "dist/cjs/index.js",
