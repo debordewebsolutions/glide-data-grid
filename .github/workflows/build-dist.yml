@@ -1,0 +1,70 @@
+# This workflow builds the core package and pushes the dist folder to a 'dist' branch
+# Install in your project with: github:debordewebsolutions/glide-data-grid#dist
+
+name: Build Dist Branch
+
+on:
+    push:
+        tags:
+            - "v*-*"
+    workflow_dispatch:
+
+jobs:
+    build-and-push:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22.21.1
+
+            - name: Install dependencies
+              run: npm install
+
+            - name: Build core package
+              run: cd packages/core && npm run build
+
+            - name: Prepare dist branch content
+              run: |
+                  # Create a temporary directory for the dist branch content
+                  mkdir -p /tmp/dist-branch
+
+                  # Copy the built dist folder
+                  cp -r packages/core/dist /tmp/dist-branch/
+
+                  # Copy package.json (modify for direct install)
+                  cat packages/core/package.json | node -e "
+                    const pkg = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));
+                    // Remove publishConfig since we're not publishing to a registry
+                    delete pkg.publishConfig;
+                    // Remove scripts that won't work
+                    delete pkg.scripts;
+                    // Update paths since dist is now at root
+                    pkg.main = 'dist/cjs/index.js';
+                    pkg.module = 'dist/esm/index.js';
+                    pkg.types = 'dist/dts/index.d.ts';
+                    pkg.browser = 'dist/esm/index.js';
+                    console.log(JSON.stringify(pkg, null, 2));
+                  " > /tmp/dist-branch/package.json
+
+                  # Copy essential files
+                  cp packages/core/README.md /tmp/dist-branch/ 2>/dev/null || true
+                  cp packages/core/LICENSE /tmp/dist-branch/ 2>/dev/null || true
+                  cp LICENSE /tmp/dist-branch/ 2>/dev/null || true
+
+            - name: Push to dist branch
+              run: |
+                  cd /tmp/dist-branch
+                  git init
+                  git config user.name "GitHub Actions"
+                  git config user.email "actions@github.com"
+                  git checkout -b dist
+                  git add -A
+                  git commit -m "Build from main branch - $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                  git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/debordewebsolutions/glide-data-grid.git
+                  git push -f origin dist

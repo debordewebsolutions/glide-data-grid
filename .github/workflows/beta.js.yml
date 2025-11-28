@@ -5,9 +5,9 @@ name: Beta CI
 
 on:
     workflow_dispatch:
-    push:
-        tags:
-            - "v*-*"
+    # push:
+    #     tags:
+    #         - "v*-*"
 
 jobs:
     publish-core:
